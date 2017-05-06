@@ -137,16 +137,21 @@ Circle.draw = function(ctx) {
 };
 
 var GlowingCircle = Object.create(Circle);
-GlowingCircle.color = {r: 255, g: 255, b: 0, a: 1};
+GlowingCircle.color = {r: 255, g: 200, b: 50, a: 1};
 GlowingCircle.glowRadiusAdd = 30;
+GlowingCircle.disappear = false;
+GlowingCircle.lifeSpan = 100;
 GlowingCircle.init = function() {
-    this.grd = ctx.createRadialGradient(0,0,0,0,0, this.radius + this.glowRadiusAdd);
+    this.grd = ctx.createRadialGradient(0,0,this.radius/4,0,0, this.radius + this.glowRadiusAdd);
     this.grd.addColorStop(0, "#FFF");
-    this.grd.addColorStop(this.radius/(this.radius + this.glowRadiusAdd), colorToText(this.color));
+    //this.grd.addColorStop(this.radius/(this.radius + this.glowRadiusAdd), colorToText(this.color));
     var fadeColor = Object.create(this.color);
+    fadeColor.a = .2;
+    this.grd.addColorStop(this.radius/(this.radius + this.glowRadiusAdd), colorToText(fadeColor));
     fadeColor.a = 0;
     this.grd.addColorStop(1, colorToText(fadeColor));
-}
+    this.lifeLeft = this.lifeSpan;
+};
 GlowingCircle.draw = function(ctx) {
     ctx.save();
     ctx.translate(this.x, this.y);
@@ -181,6 +186,21 @@ function update() {
     ctx.fillStyle = "#000";
     ctx.fillRect(0,0,WIDTH,HEIGHT);
 
+    if (mouseDown)
+    {
+        var newGlowingCircle = Object.create(GlowingCircle);
+        newGlowingCircle.disappear = true;
+        newGlowingCircle.radius = 10;
+        newGlowingCircle.friction = 1.01;
+        var angle = Math.random() * Math.PI * 2;
+        newGlowingCircle.vx = Math.cos(angle) * 10 + testGlowingCircle.vx;
+        newGlowingCircle.vy = Math.sin(angle) * 10 + testGlowingCircle.vy;
+        newGlowingCircle.x = testGlowingCircle.x + (newGlowingCircle.radius + testGlowingCircle.radius) * Math.cos(angle) - newGlowingCircle.vx;
+        newGlowingCircle.y = testGlowingCircle.y + (newGlowingCircle.radius + testGlowingCircle.radius) * Math.sin(angle) - newGlowingCircle.vy;
+        newGlowingCircle.init();
+        glowingCircles.push(newGlowingCircle);
+        sprites.push(newGlowingCircle);
+    }
     if (true) {
         var dx = x - testGlowingCircle.x;
         var dy = y - testGlowingCircle.y;
@@ -189,20 +209,6 @@ function update() {
             testGlowingCircle.vx += testGlowingCircle.accel * dx / dist;
             testGlowingCircle.vy += testGlowingCircle.accel * dy / dist;
         }
-    }
-    if (mouseDown)
-    {
-        var newGlowingCircle = Object.create(GlowingCircle);
-        newGlowingCircle.x = testGlowingCircle.x;
-        newGlowingCircle.y = testGlowingCircle.y;
-        newGlowingCircle.radius = 10;
-        newGlowingCircle.friction = 1.01;
-        var angle = Math.random() * Math.PI * 2;
-        newGlowingCircle.vx = Math.cos(angle) * 10 + testGlowingCircle.vx;
-        newGlowingCircle.vy = Math.sin(angle) * 10 + testGlowingCircle.vy;
-        newGlowingCircle.init();
-        glowingCircles.push(newGlowingCircle);
-        sprites.push(newGlowingCircle);
     }
 
     sprites.forEach(function(sprite,index) {
